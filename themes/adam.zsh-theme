@@ -1,7 +1,3 @@
-PROMPT="%{$fg[cyan]%}%~%{$reset_color%}"
-PROMPT+=" $(adam_git_status)
-%(?:%{$fg_bold[green]%}%1{%} :%{$fg_bold[red]%}%1{%} )"
-
 ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_bold[blue]%}[%{$fg[red]%}"
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%} "
 ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[blue]%}] %{$fg[yellow]%}%1{✗%}"
@@ -14,6 +10,10 @@ ZSH_THEME_GIT_PROMPT_BEHIND=""
 adam_git_status() {
   local gitstatus
   gitstatus="$(command git status --porcelain -b 2> /dev/null)"
+
+  if [[ $? -eq 128 ]]; then
+    return 1
+  fi
 
   local gitfiles
   gitfiles="$(tail -n +2 <<< "$gitstatus")"
@@ -60,3 +60,7 @@ adam_git_status() {
 
   echo "%B$FG[240][%b$FG[123] $fg_bold[blue]$branch$reset_color$remote_prompt%B$FG[240]]%b$reset_color "
 }
+
+PROMPT='%{$fg[cyan]%}%~%{$reset_color%} $(adam_git_status)
+%(?:%{%B$FG[240]%}%1{%} :%{$fg_bold[red]%}%1{%} )'
+
