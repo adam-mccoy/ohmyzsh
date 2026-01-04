@@ -21,12 +21,12 @@ adam_git_status() {
   local branch remote added removed modified untracked ahead behind
   ahead=0
   behind=0
-  if [[ "$gitstatus" =~ "^## ([^ ]+)(\.\.\.([^ ]+)?) \[(.*)\]" ]]; then
+  if [[ "$gitstatus" =~ "^## ([^ ]+)(\.\.\.([^ ]+)?)( \[(.*)\])?" ]]; then
     branch=$match[1]
     remote=$match[3]
 
     local remote_statuses
-    remote_statuses=("${(@s/,/)match[4]}")
+    remote_statuses=("${(@s/,/)match[5]}")
     for remote_status in $remote_statuses; do
       if [[ $remote_status =~ "ahead ([0-9]+)?" ]]; then
         ahead=$match[1]
@@ -43,8 +43,7 @@ adam_git_status() {
   if [[ -n $remote ]]; then
     remote_prompt=' '
     if [[ $ahead -eq 0 ]] && [[ $behind -eq 0 ]]; then
-      remote_prompt+=''
-      break
+      remote_prompt+='$fg_bold[blue]'
     fi
 
     if [[ $ahead -gt 0 ]]; then
