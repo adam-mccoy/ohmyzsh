@@ -43,7 +43,7 @@ adam_git_status() {
   if [[ -n $remote ]]; then
     remote_prompt=' '
     if [[ $ahead -eq 0 ]] && [[ $behind -eq 0 ]]; then
-      remote_prompt+='$fg_bold[blue]'
+      remote_prompt+="$fg_bold[blue]"
     fi
 
     if [[ $ahead -gt 0 ]]; then
