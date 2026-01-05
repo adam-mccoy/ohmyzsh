@@ -1,3 +1,4 @@
+ZSH_THEME_GIT_PROMPT_EQUAL=""
 ZSH_THEME_GIT_PROMPT_AHEAD=""
 ZSH_THEME_GIT_PROMPT_BEHIND=""
 
@@ -36,21 +37,19 @@ adam_git_status() {
 
   local remote_prompt
   if [[ -n $remote ]]; then
-    remote_prompt=' '
+    local remote_status
     if [[ $ahead -eq 0 ]] && [[ $behind -eq 0 ]]; then
-      remote_prompt+="$fg_bold[blue]"
+      remote_status="$fg_bold[blue]$ZSH_THEME_GIT_PROMPT_EQUAL"
     fi
 
     if [[ $ahead -gt 0 ]]; then
-      remote_prompt+="$fg[green]$ZSH_THEME_GIT_PROMPT_AHEAD$ahead"
+      remote_status="$fg[green]$ZSH_THEME_GIT_PROMPT_AHEAD$ahead"
     fi
 
     if [[ $behind -gt 0 ]]; then
-      if [[ $remote_prompt -ne ' ' ]]; then
-        remote_prompt+=' '
-      fi
-      remote_prompt+="$fg[red]$ZSH_THEME_GIT_PROMPT_BEHIND$behind"
+      remote_status="${remote_status}${remote_status:+ }$fg[red]$ZSH_THEME_GIT_PROMPT_BEHIND$behind"
     fi
+    remote_prompt=" $remote_status"
   fi
 
   local branch_status_prompt i_a i_m i_r w_a w_m w_r
