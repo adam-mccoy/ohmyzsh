@@ -10,14 +10,13 @@ adam_git_status() {
     return 1
   fi
 
-  local gitfiles filelines
-  gitfiles="$(tail -n +2 <<< "$gitstatus")"
-  filelines=("${(@f)${gitfiles}}")
+  local statuslines
+  statuslines=("${(@f)${gitstatus}}")
 
   local branch remote ahead behind
   ahead=0
   behind=0
-  if [[ "$gitstatus" =~ "^## ([^ ]+)(\.\.\.([^ ]+)?)( \[(.*)\])?" ]]; then
+  if [[ "$statuslines[1]" =~ "^## ([^ .]+)(\.\.\.([^ ]+))?( \[(.*)\])?$" ]]; then
     branch=$match[1]
     remote=$match[3]
 
@@ -53,7 +52,7 @@ adam_git_status() {
   fi
 
   local branch_status_prompt i_a i_m i_r w_a w_m w_r
-  for line in $filelines; do
+  for line in "${statuslines[2,-1]}"; do
     if [[ $line =~ "^\?\?" ]]; then
       ((w_a++))
       continue
