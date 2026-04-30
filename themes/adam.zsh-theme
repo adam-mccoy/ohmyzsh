@@ -10,13 +10,19 @@ adam_git_status() {
     return 1
   fi
 
-  local statuslines
+  local statuslines linecount
   statuslines=("${(@f)${gitstatus}}")
 
   local branch remote ahead behind
   ahead=0
   behind=0
-  if [[ "$statuslines[1]" =~ "^## ([^ .]+)(\.\.\.([^ ]+))?( \[(.*)\])?$" ]]; then
+
+  if [[ "$statuslines[1]" =~ "^## HEAD \(no branch\)$" ]]; then
+    local ref
+    ref=$(command git symbolic-ref HEAD 2> /dev/null) || \
+    ref=$(command git rev-parse --short HEAD 2> /dev/null)
+    branch="${ref#refs/heads}"
+  elif [[ "$statuslines[1]" =~ "^## ([^.]*(\.?[^.]*))(\.\.\.([^ ]+))?( \[(.*)\])?$" ]]; then
     branch=$match[1]
     remote=$match[3]
 
@@ -51,11 +57,10 @@ adam_git_status() {
     remote_prompt=" $remote_status"
   fi
 
-  local branch_status_prompt i_a i_m i_r w_a w_m w_r
-  for line in "${statuslines[2,-1]}"; do
+  local branch_status_prompt i_a i_m i_r w_a w_m w_r con
+  for line in "${statuslines[2,-1][@]}"; do
     if [[ $line =~ "^\?\?" ]]; then
       ((w_a++))
-      continue
     fi
     if [[ $line =~ "^A." ]]; then
       ((i_a++))
@@ -71,6 +76,9 @@ adam_git_status() {
     fi
     if [[ $line =~ "^.D" ]]; then
       ((w_r++))
+    fi
+    if [[ $line =~ "^UU" ]]; then
+      ((con++))
     fi
   done
 
@@ -88,7 +96,7 @@ adam_git_status() {
     branch_status_prompt=" $fg[green]$index_status$reset_color"
   fi
 
-  if [[ $((w_a+w_m+w_r)) -gt 0 ]]; then
+  if [[ $((w_a+w_m+w_r+con)) -gt 0 ]]; then
     local wc_status
     if [[ $w_a -gt 0 ]]; then
       wc_status="+$w_a"
@@ -98,6 +106,9 @@ adam_git_status() {
     fi
     if [[ $w_r -gt 0 ]]; then
       wc_status="${wc_status}${wc_status:+ }$w_r"
+    fi
+    if [[ $con -gt 0 ]]; then
+      wc_status="${wc_status}${wc_status:+ }!$con"
     fi
     branch_status_prompt="${branch_status_prompt} %{%B%F{240}%}${branch_status_prompt:+| }%{$reset_color%}$fg[red]$wc_status$reset_color"
   fi
