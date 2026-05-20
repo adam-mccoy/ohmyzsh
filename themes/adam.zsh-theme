@@ -13,21 +13,29 @@ adam_git_status() {
   local statuslines linecount
   statuslines=("${(@f)${gitstatus}}")
 
-  local branch remote ahead behind
+  local branch remote ahead behind symbol
   ahead=0
   behind=0
 
+  symbol=""
   if [[ "$statuslines[1]" =~ "^## HEAD \(no branch\)$" ]]; then
     local ref
-    ref=$(command git symbolic-ref HEAD 2> /dev/null) || \
-    ref=$(command git rev-parse --short HEAD 2> /dev/null)
+    ref=$(command git symbolic-ref HEAD 2> /dev/null)
+    if [[ $? -ne 0 ]]; then
+      ref=$(command git describe --tags --exact-match 2> /dev/null)
+      symbol=""
+
+      if [[ $? -ne 0 ]]; then
+        ref=$(command git rev-parse --short HEAD 2> /dev/null)
+      fi
+    fi
     branch="${ref#refs/heads}"
-  elif [[ "$statuslines[1]" =~ "^## ([^.]*(\.?[^.]*))(\.\.\.([^ ]+))?( \[(.*)\])?$" ]]; then
+  elif [[ "$statuslines[1]" =~ "^## (([^.]+(\.[^.])*)+)(\.\.\.([^ ]+))?( \[(.*)\])?$" ]]; then
     branch=$match[1]
-    remote=$match[3]
+    remote=$match[5]
 
     local remote_statuses
-    remote_statuses=("${(@s/,/)match[5]}")
+    remote_statuses=("${(@s/,/)match[7]}")
     for remote_status in $remote_statuses; do
       if [[ $remote_status =~ "ahead ([0-9]+)" ]]; then
         ahead=$match[1]
@@ -113,7 +121,7 @@ adam_git_status() {
     branch_status_prompt="${branch_status_prompt} %{%B%F{240}%}${branch_status_prompt:+| }%{$reset_color%}$fg[red]$wc_status$reset_color"
   fi
 
-  echo "%{%B%F{240}%}[%{%b%F{123}%} %{$fg_bold[blue]%}$branch%{$reset_color%}$remote_prompt$branch_status_prompt%B%F{240}]%b%{$reset_color%} "
+  echo "%{%B%F{240}%}[%{%b%F{123}%}${symbol} %{$fg_bold[blue]%}$branch%{$reset_color%}$remote_prompt$branch_status_prompt%B%F{240}]%b%{$reset_color%} "
 }
 
 PROMPT="%{$fg[cyan]%}%~%{$reset_color%} "
